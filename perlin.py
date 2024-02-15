@@ -1,18 +1,30 @@
 from math import cos, pi
 from random import random, seed
 
-with open("primes.txt") as f:
-    PRIME = int(f.read())
-
 
 class PerlinGenerator:
     def __init__(self, lendth, oct_num, pers):
         self.lendth = lendth
         self.oct_num = oct_num
         self.pers = pers
+        self.generate()
+
+    def __iter__(self):
+        self.ind = 0
+        return iter(self.map)
+
+    def __next__(self):
+        return next(self.map)
+
+
+    def __getitem__(self, index):
+        return self.map[index]
+
+    def __len__(self):
+        return len(self.map)
 
     def noise(self, x):
-        seed(x)
+        seed()
         return random()
 
 
@@ -25,6 +37,12 @@ class PerlinGenerator:
     def smoothed_noise(self, x):
         noise = self.noise
         return noise(x) / 2+noise(x - 1) / 4 + noise(x + 1) / 4
+
+    def generate(self):
+        out = []
+        for i in range(self.lendth):
+            out.append(self.perlin_noise(i))
+        self.map = out
 
 
     def interpolated_noise(self, x):
@@ -41,5 +59,14 @@ class PerlinGenerator:
         total = 0
         pers = self.pers
         for i in range(self.oct_num):
-            freq = 2 * i
-            amp = pers * i
+            freq = 2 ** i
+            amp = pers ** i
+            total += self.interpolated_noise(x * freq) * amp
+            return total
+
+args = [int(input()) for _ in range(3)]
+gener = PerlinGenerator(*args)
+for coord in gener:
+    print("#" * int(coord * 10))
+for coord in gener:
+    print(coord)
