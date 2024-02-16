@@ -1,72 +1,66 @@
+from perlin_noise import PerlinNoise
 from math import cos, pi
-from random import random, seed
+from random import randint
 
 
-class PerlinGenerator:
-    def __init__(self, lendth, oct_num, pers):
-        self.lendth = lendth
-        self.oct_num = oct_num
-        self.pers = pers
-        self.generate()
-
-    def __iter__(self):
-        self.ind = 0
-        return iter(self.map)
-
-    def __next__(self):
-        return next(self.map)
+def diceroll(chance):
+    roll = randint(1, 20)
+    return roll >= chance
 
 
-    def __getitem__(self, index):
-        return self.map[index]
+class Chunk:
+    lendth = 5
+    struct = "ccccc"
+    chance = 8
 
-    def __len__(self):
-        return len(self.map)
-
-    def noise(self, x):
-        seed()
-        return random()
-
-
-    def interp(self, a, b, x):
-        ft = x * pi
-        f = (1-cos(ft))/2
-        return a*(1 - f) + b * f
-
-
-    def smoothed_noise(self, x):
-        noise = self.noise
-        return noise(x) / 2+noise(x - 1) / 4 + noise(x + 1) / 4
-
-    def generate(self):
-        out = []
-        for i in range(self.lendth):
-            out.append(self.perlin_noise(i))
-        self.map = out
+    def render(self, h_map, x):
+        for i in range(len(self.struct)):
+            coord = x + i
+            if self.struct[i] == 'c':
+                pass
+            elif self.struct[i] == ' ':
+                h_map[coord] = 0
+            elif self.struct(i) == 'm':
+                ran = float("inf")
+                for j in range(1, self.lendth - i):
+                    if struct[j] == "m":
+                        h_map[j + x] = 
 
 
-    def interpolated_noise(self, x):
-        smoothed_noise = self.smoothed_noise
-        interp = self.interp
-        integer_X = int(x)
-        fractional_X = x - integer_X
-        v1 = smoothed_noise(integer_X)
-        v2 = smoothed_noise(integer_X + 1)
-        return interp(v1, v2, fractional_X)
+
+class Pit(Chunk):
+    def __init__(self):
+        self.pit_size = randint(1, self.lendth)
+        self.struct = " " * self.pit_size + "c" * (self.lendth - self.pit_size)
+        self.chance = 4
+
+class Arena(Chunk):
+    def __init__(self):
+        self.struct = "m" * self.lendth
 
 
-    def perlin_noise(self, x):
-        total = 0
-        pers = self.pers
-        for i in range(self.oct_num):
-            freq = 2 ** i
-            amp = pers ** i
-            total += self.interpolated_noise(x * freq) * amp
-            return total
+noise = PerlinNoise(octaves=8)
+min_v = -1
+max_v = 1
+height = int(input())
+width = int(input())
+h_map = list(map(lambda x: noise(x / 10), range(width)))
+norm_map = list(map(lambda x: (x - min_v) / (max_v - min_v), h_map))
 
-args = [int(input()) for _ in range(3)]
-gener = PerlinGenerator(*args)
-for coord in gener:
-    print("#" * int(coord * 10))
-for coord in gener:
-    print(coord)
+
+def cosine_interpol(a, b, x):
+    f = (1 - cos(x * pi)) / 2
+    return a * (1 - f) + b * f
+
+smoothed_map = []
+for i in range(len(norm_map) - 1):
+    smoothed_map.extend([norm_map[i], cosine_interpol(norm_map[i], norm_map[i + 1], norm_map[i] - int(norm_map[i]))])
+
+for y in range(height, 0, -1):
+    row = ''
+    for x in smoothed_map:
+        if x * height >= y:
+                row += '█'
+        else:
+             row += ' '  # Пробел для пустого пространства
+    print(row)
