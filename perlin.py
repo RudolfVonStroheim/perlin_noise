@@ -23,13 +23,15 @@ class Chunk:
                 h_map[coord] = 0
             elif self.struct[i] == 'm':
                 ran = float("inf")
+                coords = []
                 for j in range(1, self.lendth - i):
                     if self.struct[j] == "m":
                         ran = min(h_map[x + j], ran)
+                        coords.append(x + j)
                     else:
                         break
-                for j in range(self.lendth - i):
-                    h_map[j] = ran
+                for c in coords:
+                    h_map[c] = ran
         self.update()
 
 
@@ -65,13 +67,14 @@ class Generator:
         self.chunk_count = self.width // self.chunk.lendth
         self.enemy_coords = []
         self.set_structures()
+        self.h_map, self.enemy_coords = self.get_map()
 
     def diceroll(self, chance):
         roll = randint(1, 20)
         return roll >= chance
 
     def get_map(self):
-        return self.h_map, self.enemy_coords
+        return list(enumerate(self.h_map)), self.enemy_coords
 
     def set_structures(self): 
         for i in range(self.chunk_count):
@@ -106,14 +109,20 @@ class Generator:
         for y in range(self.height, 0, -1):
             row = ''
             for x in self.h_map:
-                if x * self.height >= y:
+                if x[1] * self.height >= y:
                     row += '█'
                 else:
-                     row += ' '  # Пробел для пустого пространства
+                     row += ' '
             print(row)
+            if y == 1:
+                for coord in self.h_map:
+                    if coord[0] in self.enemy_coords:
+                        print('e', end='')
+                    else:
+                        print(' ', end='')
+                print()
 
 
 gener = Generator(int(input()), int(input()))
 gener.render()
-print()
-print(*gener.get_map())
+
